@@ -18,43 +18,44 @@ RequestQueue queue = Volley.newRequestQueue(MyApp.getContext());
 
 ```Java
 public static RequestQueue newRequestQueue(Context context) {
-  // 这里什么也没做，只是调用了另一个重载方法，并给第二个参数传入 null
-	return newRequestQueue(context, (BaseHttpStack) null);
+    // 这里什么也没做，只是调用了另一个重载方法，并给第二个参数传入 null
+    return newRequestQueue(context, (BaseHttpStack) null);
 }
 
 public static RequestQueue newRequestQueue(Context context, BaseHttpStack stack) {
-	BasicNetwork network;
-  // 已知 stack 为 null
-	if (stack == null) {
-    // 在Android2.3及以上系统，会创建一个 HurlStack 对象
-    // HurlStack 内部使用 HttpURLConnection 进行网络通讯
-		if (Build.VERSION.SDK_INT >= 9) {
-			network = new BasicNetwork(new HurlStack());
-		} else {
-			String userAgent = "volley/0";
-			try {
-				String packageName = context.getPackageName();
-				PackageInfo info = context.getPackageManager().getPackageInfo(packageName, /* flags= */ 0);
-				userAgent = packageName + "/" + info.versionCode;
-			} catch (NameNotFoundException e) {}
-      // 而在Android2.3以下系统，则创建一个 HttpClientStack 对象
-      // HttpClientStack 内部使用 HttpClient 进行网络通讯
-			network = new BasicNetwork(new HttpClientStack(AndroidHttpClient.newInstance(userAgent)));
-		}
-	} else {
-		network = new BasicNetwork(stack);
-	}
-  // 最终，又会调用另一个方法重载
-	return newRequestQueue(context, network);
+    BasicNetwork network;
+    // 已知 stack 为 null
+    if (stack == null) {
+        if (Build.VERSION.SDK_INT >= 9) {
+            // 在Android2.3及以上系统，会创建一个 HurlStack 对象
+            // HurlStack 内部使用 HttpURLConnection 进行网络通讯
+            network = new BasicNetwork(new HurlStack());
+        } else {
+            String userAgent = "volley/0";
+            try {
+                String packageName = context.getPackageName();
+                PackageInfo info = context.getPackageManager().getPackageInfo(packageName, /* flags= */ 0);
+                userAgent = packageName + "/" + info.versionCode;
+            } catch (NameNotFoundException e) {
+            }
+            // 而在Android2.3以下系统，则创建一个 HttpClientStack 对象
+            // HttpClientStack 内部使用 HttpClient 进行网络通讯
+            network = new BasicNetwork(new HttpClientStack(AndroidHttpClient.newInstance(userAgent)));
+        }
+    } else {
+        network = new BasicNetwork(stack);
+    }
+    // 最终，又会调用另一个方法重载
+    return newRequestQueue(context, network);
 }
 
 private static RequestQueue newRequestQueue(Context context, Network network) {
-	File cacheDir = new File(context.getCacheDir(), DEFAULT_CACHE_DIR);
-  // 根据前面构建好的 Network 对象创建一个 RequestQueue 对象，然后调用它的 start() 方法。
-	RequestQueue queue = new RequestQueue(new DiskBasedCache(cacheDir), network);
-	queue.start();
-  // 最后将这个 RequestQueue 对象返回。
-	return queue;
+    File cacheDir = new File(context.getCacheDir(), DEFAULT_CACHE_DIR);
+    // 根据前面构建好的 Network 对象创建一个 RequestQueue 对象，然后调用它的 start() 方法。
+    RequestQueue queue = new RequestQueue(new DiskBasedCache(cacheDir), network);
+    queue.start();
+    // 最后将这个 RequestQueue 对象返回。
+    return queue;
 }
 ```
 
